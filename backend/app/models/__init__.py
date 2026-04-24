@@ -60,6 +60,9 @@ class BorrowRecord(db.Model):
     return_time = db.Column(db.DateTime)
     status = db.Column(db.String(20), default='borrowed')
 
+    book = db.relationship('Book', backref='borrow_records')
+    user = db.relationship('User', backref='borrow_records')
+
 class AuditLog(db.Model):
     __tablename__ = 'audit_logs'
     id = db.Column(db.Integer, primary_key=True)
