@@ -4,6 +4,7 @@ from .. import db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from werkzeug.security import generate_password_hash
 from sqlalchemy import or_
+from sqlalchemy.orm import joinedload
 
 users_bp = Blueprint('users', __name__)
 
@@ -16,7 +17,7 @@ def get_users():
     search = request.args.get('search', '')
     role_id = request.args.get('role_id', type=int)
     
-    query = User.query
+    query = User.query.options(joinedload(User.role))
     
     if search:
         query = query.filter(or_(

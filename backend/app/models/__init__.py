@@ -13,6 +13,8 @@ class User(db.Model):
     email = db.Column(db.String(120))
     is_active = db.Column(db.Boolean, default=True)
     
+    role = db.relationship('Role', backref='users')
+    
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
     
