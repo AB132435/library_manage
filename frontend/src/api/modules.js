@@ -63,6 +63,12 @@ export const bookApi = {
   },
   collect(id) {
     return api.post(`/books/${id}/collect`)
+  },
+  getPublishers() {
+    return api.get('/books/publishers')
+  },
+  getCategories() {
+    return api.get('/books/categories')
   }
 }
 
@@ -111,6 +117,9 @@ export const announcementApi = {
 export const logApi = {
   getAll(params) {
     return api.get('/logs', { params })
+  },
+  getStats() {
+    return api.get('/logs/stats')
   }
 }
 

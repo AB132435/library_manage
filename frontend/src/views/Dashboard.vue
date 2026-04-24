@@ -4,35 +4,39 @@
       <el-aside width="200px" class="sidebar">
         <div class="logo">图书管理系统</div>
         <el-menu :default-active="activeMenu" router background-color="#304156" text-color="#bfcbd9" active-text-color="#409EFF">
-          <el-menu-item index="/dashboard">
+          <el-menu-item index="/dashboard/data" v-if="!userStore.isAuditor">
             <el-icon><DataAnalysis /></el-icon>
             <span>数据大屏</span>
           </el-menu-item>
-          <el-menu-item index="/books">
+          <el-menu-item index="/dashboard/audit" v-if="userStore.isAuditor || userStore.isAdmin">
+            <el-icon><TrendCharts /></el-icon>
+            <span>审计看板</span>
+          </el-menu-item>
+          <el-menu-item index="/dashboard/books">
             <el-icon><Reading /></el-icon>
             <span>图书管理</span>
           </el-menu-item>
-          <el-menu-item index="/borrow">
+          <el-menu-item index="/dashboard/borrow">
             <el-icon><List /></el-icon>
             <span>借阅管理</span>
           </el-menu-item>
-          <el-menu-item v-if="userStore.isAdmin" index="/users">
+          <el-menu-item v-if="userStore.isAdmin" index="/dashboard/users">
             <el-icon><User /></el-icon>
             <span>用户管理</span>
           </el-menu-item>
-          <el-menu-item v-if="userStore.isAdmin" index="/roles">
+          <el-menu-item v-if="userStore.isAdmin" index="/dashboard/roles">
             <el-icon><Setting /></el-icon>
             <span>角色权限</span>
           </el-menu-item>
-          <el-menu-item index="/announcements">
+          <el-menu-item index="/dashboard/announcements">
             <el-icon><Bell /></el-icon>
             <span>公告管理</span>
           </el-menu-item>
-          <el-menu-item v-if="userStore.isAuditor || userStore.isAdmin" index="/logs">
+          <el-menu-item v-if="userStore.isAuditor || userStore.isAdmin" index="/dashboard/logs">
             <el-icon><Document /></el-icon>
             <span>审计日志</span>
           </el-menu-item>
-          <el-menu-item index="/profile">
+          <el-menu-item index="/dashboard/profile">
             <el-icon><Avatar /></el-icon>
             <span>个人中心</span>
           </el-menu-item>
@@ -83,14 +87,16 @@ const activeMenu = computed(() => route.path)
 
 const currentTitle = computed(() => {
   const titles = {
-    '/dashboard': '数据大屏',
-    '/books': '图书管理',
-    '/borrow': '借阅管理',
-    '/users': '用户管理',
-    '/roles': '角色权限',
-    '/announcements': '公告管理',
-    '/logs': '审计日志',
-    '/profile': '个人中心'
+    '/dashboard': '首页',
+    '/dashboard/data': '数据大屏',
+    '/dashboard/audit': '审计看板',
+    '/dashboard/books': '图书管理',
+    '/dashboard/borrow': '借阅管理',
+    '/dashboard/users': '用户管理',
+    '/dashboard/roles': '角色权限',
+    '/dashboard/announcements': '公告管理',
+    '/dashboard/logs': '审计日志',
+    '/dashboard/profile': '个人中心'
   }
   return titles[route.path] || '页面'
 })

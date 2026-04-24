@@ -2,8 +2,8 @@ from flask import Blueprint, request, jsonify
 from ..models import AuditLog
 from .. import db
 from flask_jwt_extended import jwt_required
-from datetime import datetime
-from sqlalchemy import desc
+from datetime import datetime, timedelta
+from sqlalchemy import desc, func, cast, Date
 
 logs_bp = Blueprint('logs', __name__)
 
@@ -83,3 +83,45 @@ def get_log_modules():
     """获取所有日志模块列表（用于筛选下拉框）"""
     modules = db.session.query(AuditLog.module).distinct().all()
     return jsonify([m[0] for m in modules if m[0]]), 200
+
+
+@logs_bp.route('/stats', methods=['GET'])
+@jwt_required()
+def get_log_stats():
+    """获取审计日志统计信息（用于看板）"""
+    # 按模块统计
+    module_stats = db.session.query(
+        AuditLog.module,
+        func.count(AuditLog.id).label('count')
+    ).group_by(AuditLog.module).all()
+
+    # 按操作类型统计
+    action_stats = db.session.query(
+        AuditLog.action,
+        func.count(AuditLog.id).label('count')
+    ).group_by(AuditLog.action).all()
+
+    # 按日期统计（最近7天）- 使用 func.date 兼容 SQLite
+    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    date_stats = db.session.query(
+        func.date(AuditLog.op_time).label('date'),
+        func.count(AuditLog.id).label('count')
+    ).filter(AuditLog.op_time >= seven_days_ago) \
+     .group_by(func.date(AuditLog.op_time)) \
+     .order_by(func.date(AuditLog.op_time)) \
+     .all()
+
+    # 今日操作数
+    today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    today_count = AuditLog.query.filter(AuditLog.op_time >= today).count()
+
+    # 总日志数
+    total_count = AuditLog.query.count()
+
+    return jsonify({
+        "module_stats": [{"module": m[0], "count": m[1]} for m in module_stats],
+        "action_stats": [{"action": a[0], "count": a[1]} for a in action_stats],
+        "date_stats": [{"date": str(d[0]), "count": d[1]} for d in date_stats],
+        "today_count": today_count,
+        "total_count": total_count
+    }), 200

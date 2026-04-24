@@ -236,3 +236,25 @@ def collect_book(book_id):
     """收藏图书（简化版，实际可能需要收藏表）"""
     # 这里简单返回成功，实际项目中需要创建收藏表
     return jsonify({"msg": "收藏成功"}), 200
+
+
+@books_bp.route('/publishers', methods=['GET'])
+@jwt_required()
+def get_publishers():
+    """获取出版社列表"""
+    publishers = Publisher.query.all()
+    return jsonify([{
+        "id": p.id,
+        "name": p.name
+    } for p in publishers]), 200
+
+
+@books_bp.route('/categories', methods=['GET'])
+@jwt_required()
+def get_categories():
+    """获取图书分类列表"""
+    categories = Category.query.all()
+    return jsonify([{
+        "id": c.id,
+        "name": c.name
+    } for c in categories]), 200
