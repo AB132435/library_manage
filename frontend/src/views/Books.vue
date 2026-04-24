@@ -187,7 +187,8 @@ const loadBooks = async () => {
     books.value = data.books || []
     pagination.total = data.total || 0
   } catch (error) {
-    ElMessage.error('加载图书列表失败')
+    const msg = error.response?.data?.msg || error.response?.data?.message || error.message
+    ElMessage.error(`加载图书列表失败: ${msg}`)
   } finally {
     loading.value = false
   }

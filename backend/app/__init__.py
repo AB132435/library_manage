@@ -2,17 +2,17 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-import os
+import os, re
 
 db = SQLAlchemy()
 jwt = JWTManager()
 
 def create_app(config_name='development'):
     app = Flask(__name__)
-
+    
     # 禁用URL严格斜杠检查 - 避免301重定向导致CORS和JWT丢失
     app.url_map.strict_slashes = False
-
+    
     # 基础配置
     app.config['SECRET_KEY'] = 'dev-secret-key-change-in-prod'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -26,7 +26,15 @@ def create_app(config_name='development'):
     # 初始化扩展
     db.init_app(app)
     jwt.init_app(app)
-    CORS(app, supports_credentials=True, origins=['http://localhost:5173', 'http://192.168.1.89:5173'])
+    
+    # CORS 配置：支持所有 localhost 端口 + 127.0.0.1 + 常见开发端口
+    CORS(
+        app, 
+        supports_credentials=True, 
+        origins=re.compile(r'https?://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+)(:\d+)?'),
+        allow_headers=['Content-Type', 'Authorization', 'X-Requested-With'],
+        methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH']
+    )
     
     # 注册蓝图
     from .api.auth import auth_bp
