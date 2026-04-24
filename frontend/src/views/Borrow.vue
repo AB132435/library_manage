@@ -5,9 +5,13 @@
         <span>我的借阅</span>
       </template>
       <el-table :data="borrows" v-loading="loading">
-        <el-table-column prop="book_name" label="图书名称" />
-        <el-table-column prop="borrow_date" label="借阅日期" width="120" />
-        <el-table-column prop="due_date" label="应还日期" width="120" />
+        <el-table-column prop="book_title" label="图书名称" />
+        <el-table-column prop="borrow_time" label="借阅日期" width="180">
+          <template #default="{ row }">{{ row.borrow_time ? new Date(row.borrow_time).toLocaleString('zh-CN') : '-' }}</template>
+        </el-table-column>
+        <el-table-column prop="due_time" label="应还日期" width="180">
+          <template #default="{ row }">{{ row.due_time ? new Date(row.due_time).toLocaleString('zh-CN') : '-' }}</template>
+        </el-table-column>
         <el-table-column prop="status" label="状态" width="90">
           <template #default="{ row }">
             <el-tag :type="row.is_overdue ? 'danger' : 'success'">
