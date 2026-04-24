@@ -8,7 +8,7 @@
             <el-icon><DataAnalysis /></el-icon>
             <span>数据大屏</span>
           </el-menu-item>
-          <el-menu-item index="/dashboard/audit" v-if="userStore.isAuditor || userStore.isAdmin">
+          <el-menu-item index="/dashboard/audit" v-if="userStore.isAuditor">
             <el-icon><TrendCharts /></el-icon>
             <span>审计看板</span>
           </el-menu-item>

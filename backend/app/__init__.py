@@ -9,7 +9,10 @@ jwt = JWTManager()
 
 def create_app(config_name='development'):
     app = Flask(__name__)
-    
+
+    # 禁用URL严格斜杠检查 - 避免301重定向导致CORS和JWT丢失
+    app.url_map.strict_slashes = False
+
     # 基础配置
     app.config['SECRET_KEY'] = 'dev-secret-key-change-in-prod'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
