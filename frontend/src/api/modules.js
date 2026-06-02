@@ -120,6 +120,16 @@ export const logApi = {
   },
   getStats() {
     return api.get('/logs/stats')
+  },
+  exportLogs(params) {
+    return api.get('/logs/export', { params, responseType: 'blob' })
+  },
+  importLogs(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.post('/logs/import', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
   }
 }
 

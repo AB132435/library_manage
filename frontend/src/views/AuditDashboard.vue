@@ -1,5 +1,15 @@
 <template>
   <div class="audit-dashboard">
+    <!-- 操作按钮 -->
+    <div class="action-bar">
+      <el-button type="primary" @click="handleExport" :loading="exporting">
+        <el-icon><Download /></el-icon> 导出日志
+      </el-button>
+      <el-button type="success" @click="importDialogVisible = true">
+        <el-icon><Upload /></el-icon> 导入日志
+      </el-button>
+    </div>
+
     <!-- 统计卡片 -->
     <el-row :gutter="20" class="stat-cards">
       <el-col :span="6">
@@ -98,6 +108,34 @@
         </el-card>
       </el-col>
     </el-row>
+
+    <!-- 导入对话框 -->
+    <el-dialog v-model="importDialogVisible" title="导入审计日志" width="500px">
+      <el-upload
+        ref="uploadRef"
+        drag
+        :auto-upload="false"
+        :on-change="handleFileChange"
+        :limit="1"
+        accept=".xlsx"
+      >
+        <el-icon class="el-icon--upload"><Upload-Filled /></el-icon>
+        <div class="el-upload__text">
+          拖拽文件到此处或 <em>点击上传</em>
+        </div>
+        <template #tip>
+          <div class="el-upload__tip">仅支持 .xlsx 格式文件</div>
+        </template>
+      </el-upload>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="importDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleImport" :loading="importing">
+            确定导入
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -106,10 +144,12 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import * as echarts from 'echarts'
 import { logApi } from '../api/modules'
 import { ElMessage } from 'element-plus'
+import { Download, Upload, UploadFilled, Document, CircleCheck, Reading, List } from '@element-plus/icons-vue'
 
 const moduleChart = ref(null)
 const actionChart = ref(null)
 const trendChart = ref(null)
+const uploadRef = ref(null)
 
 const stats = ref({
   total_count: 0,
@@ -121,6 +161,12 @@ const stats = ref({
 
 const latestLogs = ref([])
 let charts = []
+
+// 导入导出相关状态
+const exporting = ref(false)
+const importing = ref(false)
+const importDialogVisible = ref(false)
+const selectedFile = ref(null)
 
 const bookOps = computed(() => {
   const m = stats.value.module_stats.find(item => item.module === 'books')
@@ -241,6 +287,64 @@ const renderCharts = () => {
   }
 }
 
+// 导出日志
+const handleExport = async () => {
+  exporting.value = true
+  try {
+    const res = await logApi.exportLogs()
+    const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    
+    // 生成文件名
+    const now = new Date()
+    const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, -5)
+    link.download = `audit_logs_${timestamp}.xlsx`
+    
+    link.click()
+    window.URL.revokeObjectURL(url)
+    ElMessage.success('导出成功')
+  } catch (error) {
+    console.error('导出失败:', error)
+    ElMessage.error('导出失败，请稍后重试')
+  } finally {
+    exporting.value = false
+  }
+}
+
+// 处理文件选择
+const handleFileChange = (file) => {
+  selectedFile.value = file.raw
+}
+
+// 导入日志
+const handleImport = async () => {
+  if (!selectedFile.value) {
+    ElMessage.warning('请选择要导入的文件')
+    return
+  }
+  
+  importing.value = true
+  try {
+    const res = await logApi.importLogs(selectedFile.value)
+    ElMessage.success(`导入成功！成功 ${res.data.success_count || 0} 条，跳过 ${res.data.skipped_count || 0} 条`)
+    importDialogVisible.value = false
+    selectedFile.value = null
+    if (uploadRef.value) {
+      uploadRef.value.clearFiles()
+    }
+    // 重新加载统计数据
+    loadStats()
+  } catch (error) {
+    console.error('导入失败:', error)
+    const errorMsg = error.response?.data?.detail || '导入失败，请检查文件格式'
+    ElMessage.error(errorMsg)
+  } finally {
+    importing.value = false
+  }
+}
+
 onMounted(() => {
   loadStats()
 })
@@ -287,5 +391,17 @@ onUnmounted(() => {
 
 .charts-row {
   margin-bottom: 20px;
+}
+
+.action-bar {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 </style>
