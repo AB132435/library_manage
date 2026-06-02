@@ -66,14 +66,28 @@ def get_my_borrows():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 20, type=int)
     status = request.args.get('status', '')
+    sort_by = request.args.get('sort_by', 'borrow_time')
+    sort_order = request.args.get('sort_order', 'desc')
     
     query = BorrowRecord.query.filter_by(user_id=current_user_id)
     
     if status:
         query = query.filter_by(status=status)
     
-    # 按借阅时间倒序排列
-    query = query.order_by(desc(BorrowRecord.borrow_time))
+    # 根据排序字段和顺序进行排序
+    if sort_by == 'borrow_time':
+        if sort_order == 'asc':
+            query = query.order_by(BorrowRecord.borrow_time.asc())
+        else:
+            query = query.order_by(BorrowRecord.borrow_time.desc())
+    elif sort_by == 'due_time':
+        if sort_order == 'asc':
+            query = query.order_by(BorrowRecord.due_time.asc())
+        else:
+            query = query.order_by(BorrowRecord.due_time.desc())
+    else:
+        # 默认按借阅时间倒序排列
+        query = query.order_by(desc(BorrowRecord.borrow_time))
     
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     records = pagination.items

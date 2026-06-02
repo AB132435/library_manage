@@ -4,12 +4,24 @@
       <template #header>
         <span>我的借阅</span>
       </template>
-      <el-table :data="borrows" v-loading="loading">
+      <el-table :data="borrows" v-loading="loading" @sort-change="handleSortChange">
         <el-table-column prop="book_title" label="图书名称" />
-        <el-table-column prop="borrow_time" label="借阅日期" width="180">
+        <el-table-column 
+          prop="borrow_time" 
+          label="借阅日期" 
+          width="180"
+          sortable="custom"
+          :sort-order="sortOrder === 'borrow_time' ? sortDirection : null"
+        >
           <template #default="{ row }">{{ row.borrow_time ? new Date(row.borrow_time).toLocaleString('zh-CN') : '-' }}</template>
         </el-table-column>
-        <el-table-column prop="due_time" label="应还日期" width="180">
+        <el-table-column 
+          prop="due_time" 
+          label="应还日期" 
+          width="180"
+          sortable="custom"
+          :sort-order="sortOrder === 'due_time' ? sortDirection : null"
+        >
           <template #default="{ row }">{{ row.due_time ? new Date(row.due_time).toLocaleString('zh-CN') : '-' }}</template>
         </el-table-column>
         <el-table-column prop="status" label="状态" width="90">
@@ -36,11 +48,13 @@ import { borrowApi } from '../api/modules'
 
 const loading = ref(false)
 const borrows = ref([])
+const sortOrder = ref('borrow_time')
+const sortDirection = ref(null)
 
-const loadBorrows = async () => {
+const loadBorrows = async (params = {}) => {
   loading.value = true
   try {
-    const res = await borrowApi.getMyBorrows()
+    const res = await borrowApi.getMyBorrows(params)
     const data = res.data
     borrows.value = data.records || data || []
   } catch (error) {
@@ -50,11 +64,32 @@ const loadBorrows = async () => {
   }
 }
 
+const handleSortChange = ({ prop, order }) => {
+  if (!prop || !order) {
+    // 取消排序，使用默认排序
+    sortOrder.value = 'borrow_time'
+    sortDirection.value = null
+    loadBorrows()
+    return
+  }
+  
+  sortOrder.value = prop
+  sortDirection.value = order
+  
+  loadBorrows({
+    sort_by: prop,
+    sort_order: order === 'ascending' ? 'asc' : 'desc'
+  })
+}
+
 const returnBook = async (row) => {
   try {
     await borrowApi.returnBook(row.id)
     ElMessage.success('归还成功')
-    loadBorrows()
+    loadBorrows({
+      sort_by: sortOrder.value,
+      sort_order: sortDirection.value === 'ascending' ? 'asc' : 'desc'
+    })
   } catch (error) {
     ElMessage.error('归还失败')
   }

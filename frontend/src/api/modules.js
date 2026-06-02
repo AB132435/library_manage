@@ -76,8 +76,8 @@ export const borrowApi = {
   getAll(params) {
     return api.get('/borrows', { params })
   },
-  getMyBorrows() {
-    return api.get('/borrows/my')
+  getMyBorrows(params) {
+    return api.get('/borrows/my', { params })
   },
   returnBook(id) {
     return api.post(`/borrows/${id}/return`)
