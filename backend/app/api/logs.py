@@ -295,7 +295,7 @@ def import_logs():
 
         result = {
             "message": "导入完成",
-            "imported_count": imported_count,
+            "success_count": imported_count,
             "skipped_count": skipped_count
         }
         if error_messages:
